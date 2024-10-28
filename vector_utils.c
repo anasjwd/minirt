@@ -82,3 +82,11 @@ double	vector_length(t_vec3 *vec)
 	length_squared = (vec->x * vec->x) + (vec->y * vec->y) + (vec->z * vec->z);
 	return (sqrt(length_squared));
 }
+
+t_vec3	*unit_vector(t_vec3 *vector)
+{
+	t_vec3	*unit_vector;
+
+	unit_vector = division_op(vector_length(vector), vector);
+	return (unit_vector);
+}
