@@ -75,12 +75,17 @@ t_vec3	*cross_product(t_vec3 *v, t_vec3 *u)
 	return (cross_product_vec);
 }
 
-double	vector_length(t_vec3 *vec)
+double	vector_length_squared(t_vec3 *vec)
 {
 	double	length_squared;
 
 	length_squared = (vec->x * vec->x) + (vec->y * vec->y) + (vec->z * vec->z);
-	return (sqrt(length_squared));
+	return (length_squared);
+}
+
+double	vector_length(t_vec3 *vec)
+{
+	return (sqrt(vector_length_squared(vec)));
 }
 
 t_vec3	*unit_vector(t_vec3 *vector)
@@ -90,3 +95,9 @@ t_vec3	*unit_vector(t_vec3 *vector)
 	unit_vector = division_op(vector_length(vector), vector);
 	return (unit_vector);
 }
+
+T_POINT3	*ray_at(t_ray *ray, double t)
+{
+	return (addition_op(ray->orig, scalar_op(t, ray->dir)));
+}
+

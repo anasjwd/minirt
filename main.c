@@ -3,14 +3,6 @@
 #define HEIGHT 500
 #define WIDTH 500
 
-typedef struct s_img {
-	void	*img;
-	char	*addr;
-	int		bits_per_pixel;
-	int		line_length;
-	int		endian;
-}				t_img;
-
 void	ft_mlx_pixel_put(t_img *img, int x, int y, T_COLOR *color)
 {
 	char	*dest;
@@ -35,7 +27,7 @@ t_vec3	*create_vec3(int x, int y, int z)
 	return (vector);
 }
 
-int	hit_sphere(T_POINT3 *center, double radius, t_ray *ray)
+double	hit_sphere(T_POINT3 *center, double radius, t_ray *ray)
 {
 	t_vec3	*oc;
 	double	a;
@@ -48,10 +40,10 @@ int	hit_sphere(T_POINT3 *center, double radius, t_ray *ray)
 	b = -2.0 * dot_product(ray->dir, oc);
 	c = dot_product(oc, oc) - radius * radius;
 	discriminant = b * b - 4 * a * c;
-	if (discriminant >= 0)
-		return (1);
+	if (discriminant < 0)
+		return (-1.0);
 	else
-		return (0);
+		return ((-b - sqrt(discriminant)) / (2.0 * a));
 }
 
 T_COLOR	*ray_color(t_ray *ray)
@@ -62,16 +54,20 @@ T_COLOR	*ray_color(t_ray *ray)
 	T_COLOR	blue;
 	T_POINT3	sphere_center;
 	T_COLOR	*color;
+	double	t;
+	t_vec3	*normal_vector;
 
 	sphere_center.x = 0;
 	sphere_center.y = 0;
 	sphere_center.z = -1;
-	if (hit_sphere(&sphere_center, 0.5, ray))
+	t = hit_sphere(&sphere_center, 0.5, ray);
+	if (t > 0.0)
 	{
+		normal_vector = unit_vector(subtraction_op(ray_at(ray, t), &sphere_center));
 		color = malloc(sizeof(T_COLOR));
-		color->x = 1;
-		color->y = 0;
-		color->z = 0;
+		color->x = 0.5 * (normal_vector->x + 1);
+		color->y = 0.5 * (normal_vector->y + 1);
+		color->z = 0.5 * (normal_vector->z + 1);
 		return (color);
 	}
 	unit_direction = unit_vector(ray->dir);
@@ -134,9 +130,7 @@ int	main(void)
 	
 	//calc location of the upper left pixel
 	viewport_upper_left = subtraction_op(subtraction_op(subtraction_op(&camera_center, create_vec3(0, 0, focal_length)), division_op(2, &viewport_u)), division_op(2, &viewport_v));
-	printf("viewport_upper_left: x=%f\ty=%f\tz=%f\n", viewport_upper_left->x, viewport_upper_left->y, viewport_upper_left->z);
 	pixel00_loc = addition_op(viewport_upper_left, scalar_op(0.5, addition_op(pixel_delta_u, pixel_delta_v)));
-	printf("pixel00_loc: x=%f\ty=%f\tz=%f\n", pixel00_loc->x, pixel00_loc->y, pixel00_loc->z);
 	
 	//create window
 	mlx = mlx_init();
