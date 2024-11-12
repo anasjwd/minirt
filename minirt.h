@@ -1,20 +1,24 @@
 #ifndef MINIRT_H
-#define MINIRT_H
+# define MINIRT_H
 
-#include "mlx.h"
-#include <stdio.h>
-#include <stdlib.h>
-#include <unistd.h>
-#include <string.h>
-#include <math.h>
+# include "mlx.h"
+# include <stdio.h>
+# include <stdlib.h>
+# include <unistd.h>
+# include <string.h>
+# include <math.h>
 
-#define T_VEC3 t_vec3
-#define T_POINT3 t_vec3
-#define T_COLOR	t_vec3
+# define T_VEC3 t_vec3
+# define T_POINT3 t_vec3
+# define T_COLOR	t_vec3
 
-#define BOOL int
-#define FALSE 0
-#define TRUE 1
+# define BOOL int
+# define FALSE 0
+# define TRUE 1
+
+# define PI 3.14159265358979323
+
+# define SPHERE 0
 
 typedef struct s_img {
 	void	*img;
@@ -64,12 +68,20 @@ typedef struct s_hit_record {
 	T_POINT3	*point;
 	T_VEC3		*normal;
 	double		t;
+	BOOL		front_face;
 }				t_hit_record;
 
+typedef struct s_object {
+	int	type;
+}				t_object;
+
 typedef struct s_sphere {
+	int			type;
 	T_POINT3	*center;
-	double		*radius;
-}
+	double		radius;
+	BOOL		(*hit)(struct s_sphere *, t_ray *, int *, t_hit_record *);
+	t_object	*next;
+}				t_sphere;
 
 typedef struct s_quadratic_eq {
 	double	a;
@@ -90,5 +102,9 @@ double	vector_length(t_vec3 *vec);
 t_vec3	*unit_vector(t_vec3 *vector);
 T_POINT3	*ray_at(t_ray *ray, double t);
 double	vector_length_squared(t_vec3 *vec);
+BOOL	sphere_hit(t_sphere *sphere, t_ray *ray, int *ray_t,
+		t_hit_record *rec);
+void	set_face_normal(t_hit_record *hit_record,
+					t_ray *ray, T_VEC3 *outward_normal);
 
 #endif

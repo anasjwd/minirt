@@ -1,5 +1,24 @@
 #include "minirt.h"
 
+void	set_face_normal(t_hit_record *hit_record,
+					t_ray *ray, T_VEC3 *outward_normal)
+{
+	/**
+	 * sets the hit record normal vector to always be against the ray dir
+	 * NOTE: the parameter outward_normal is assumed to have unit length
+	 **/
+	if (dot_product(ray->dir, outward_normal) > 0.0)
+	{
+		hit_record->normal = scalar_op(-1, outward_normal);
+		hit_record->front_face = FALSE; //not front face so ray hit from inside
+	}
+	else
+	{
+		hit_record->normal = outward_normal;
+		hit_record->front_face = TRUE;
+	}
+}
+
 void	pixel_put_in_img(t_img *img, int x, int y, T_COLOR *color)
 {
 	char	*dest;
@@ -76,25 +95,6 @@ int	create_image(t_data *win_data)
 			&win_data->img.endian);
 }
 
-double	hit_sphere(T_POINT3	*center, double radius, t_ray *ray)
-{
-	T_VEC3	*oc;
-	double	a;
-	double	h;
-	double	c;
-	double	discriminant;
-
-	oc = subtraction_op(center, ray->orig);
-	a = vector_length_squared(ray->dir);
-	h = dot_product(ray->dir, oc);
-	c = vector_length_squared(oc) - (radius * radius);
-	discriminant = h * h - a * c;
-	if (discriminant < 0)
-		return (-1.0);
-	else
-		return ((h - sqrt(discriminant)) / a);
-}
-
 T_COLOR	*ray_color(t_ray *ray)
 {
 	T_COLOR		white_color;
@@ -106,23 +106,27 @@ T_COLOR	*ray_color(t_ray *ray)
 	T_POINT3	sphere_center;
 	T_VEC3		*normal_vec;
 	double		a;
-	double		t;
+	int			ray_t[2];
+	t_hit_record	hit_record;
+	t_sphere		sphere;
 	
 	/*TODO: use libft's memset*/
 	//memset(&sphere_center, 0, sizeof(T_POINT3));
 	sphere_center.x = 0;
 	sphere_center.y = 0;
 	sphere_center.z = -1.0;
-	t = hit_sphere(&sphere_center, 0.5, ray);
-	if (t > 0.0)
+	sphere.center = &sphere_center;
+	sphere.radius = 0.5;
+	ray_t[0] = -2147483648;
+	ray_t[1] = 2147483647;
+	if (sphere_hit(&sphere, ray, ray_t, &hit_record))
 	{
-		normal_vec = unit_vector(subtraction_op(ray_at(ray, t), &sphere_center));
 		color = malloc(sizeof(T_COLOR));
 		if (color == NULL)
 			return (NULL);
-		color->x = 0.5 * (normal_vec->x + 1);
-		color->y = 0.5 * (normal_vec->y + 1);
-		color->z = 0.5 * (normal_vec->z + 1);
+		color->x = 0.5 * (hit_record.normal->x + 1);
+		color->y = 0.5 * (hit_record.normal->y + 1);
+		color->z = 0.5 * (hit_record.normal->z + 1);
 		return (color);
 	}
 	unit_direction = unit_vector(ray->dir);
