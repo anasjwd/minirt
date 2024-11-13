@@ -1,6 +1,4 @@
 #include "minirt.h"
-#define MIN 0
-#define MAX 1
 
 t_sphere	*create_sphere(T_POINT3 *center, double radius)
 {
@@ -9,16 +7,14 @@ t_sphere	*create_sphere(T_POINT3 *center, double radius)
 	sphere = malloc(sizeof(t_sphere));
 	if (sphere == NULL)
 		return (NULL);
-	sphere->type = SPHERE;
 	sphere->center = center;
 	sphere->radius = radius;
-	sphere->hit = &sphere_hit;
 	if (sphere->radius < 0)
 		sphere->radius = 0;
 	return (sphere);
 }
 
-BOOL	sphere_hit(t_sphere *sphere, t_ray *ray, int *ray_t,
+BOOL	hit_sphere(void *object, t_ray *ray, t_interval *ray_t,
 		t_hit_record *rec)
 {
 	t_vec3			*oc;
@@ -26,7 +22,9 @@ BOOL	sphere_hit(t_sphere *sphere, t_ray *ray, int *ray_t,
 	double			discriminant_sqrtd;
 	double			root;
 	T_VEC3			*outward_normal;
+	t_sphere		*sphere;
 
+	sphere = (t_sphere *)object;
 	/*TODO: checks if oc == NULL*/
 	oc = subtraction_op(sphere->center, ray->orig);
 	quadratic_eq.a = vector_length_squared(ray->dir);
@@ -38,10 +36,10 @@ BOOL	sphere_hit(t_sphere *sphere, t_ray *ray, int *ray_t,
 		return (FALSE);
 	discriminant_sqrtd = sqrt(quadratic_eq.discriminant);
 	root = (quadratic_eq.rep - discriminant_sqrtd) / quadratic_eq.a;
-	if (root <= ray_t[MIN] || root >= ray_t[MAX])
+	if (root <= ray_t->min || root >= ray_t->max)
 	{
 		root = (quadratic_eq.rep + discriminant_sqrtd) / quadratic_eq.a;
-		if (root <= ray_t[MIN] || root >= ray_t[MAX])
+		if (root <= ray_t->min || root >= ray_t->max)
 			return (FALSE);
 	}
 	rec->t = root;

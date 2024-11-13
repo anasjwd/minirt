@@ -101,3 +101,10 @@ T_POINT3	*ray_at(t_ray *ray, double t)
 	return (addition_op(ray->orig, scalar_op(t, ray->dir)));
 }
 
+void	fill_vec3(t_vec3 *vec, double x, double y, double z)
+{
+	vec->x = x;
+	vec->y = y;
+	vec->z = z;
+}
+

@@ -61,8 +61,43 @@ t_vec3	*create_vec3(double x, double y, double z)
 	return (v);
 }
 
+void	add_object(t_object_container **world, t_object_container *new_object)
+{
+	t_object_container	*temp;
+
+	if (world == NULL)
+		return ;
+	if (*world == NULL)
+		*world = new_object;
+	else
+	{
+		temp = *world;
+		while (temp->next != NULL)
+			temp = temp->next;
+		temp->next = new_object;
+	}
+}
+
+t_object_container	*create_object(int type, void *object)
+{
+	t_object_container	*node;
+
+	node = malloc(sizeof(t_object_container));
+	if (node == NULL)
+		return (NULL);
+	node->type = type;
+	node->object = object;
+	node->next = NULL;
+	return (node);
+}
+
 int	setup_3d_world(t_data *win_data, t_setup3d *setup3d)
 {
+	setup3d->world = NULL;
+	add_object(&setup3d->world, create_object(SPHERE,
+			create_sphere(create_vec3(0, 0, -1), 0.5)));
+	add_object(&setup3d->world, create_object(SPHERE,
+			create_sphere(create_vec3(0, -100.5, -1), 100)));
 	setup3d->focal_length = 1.0;
 	setup3d->viewport_height = 2.0;
 	/*height * aspect_ratio*/
@@ -95,52 +130,55 @@ int	create_image(t_data *win_data)
 			&win_data->img.endian);
 }
 
-T_COLOR	*ray_color(t_ray *ray)
+BOOL	hit_any_object(t_object_container *world, t_ray *ray, t_interval *ray_t,
+		t_hit_record *rec)
 {
-	T_COLOR		white_color;
-	T_COLOR		blue_color;
-	T_VEC3		*unit_direction;
-	T_COLOR		*temp1;
-	T_COLOR		*temp2;
-	T_COLOR		*color;
-	T_POINT3	sphere_center;
-	T_VEC3		*normal_vec;
-	double		a;
-	int			ray_t[2];
-	t_hit_record	hit_record;
-	t_sphere		sphere;
-	
-	/*TODO: use libft's memset*/
-	//memset(&sphere_center, 0, sizeof(T_POINT3));
-	sphere_center.x = 0;
-	sphere_center.y = 0;
-	sphere_center.z = -1.0;
-	sphere.center = &sphere_center;
-	sphere.radius = 0.5;
-	ray_t[0] = -2147483648;
-	ray_t[1] = 2147483647;
-	if (sphere_hit(&sphere, ray, ray_t, &hit_record))
+	t_hit_record		*temp_rec;
+	t_interval			interval;
+	BOOL				hit_anything;
+	t_object_container	*container;
+
+	hit_anything = FALSE;
+	interval.min = ray_t->min;
+	interval.max = ray_t->max;
+	temp_rec = rec;
+	container = world;
+	while (container != NULL)
 	{
-		color = malloc(sizeof(T_COLOR));
-		if (color == NULL)
-			return (NULL);
-		color->x = 0.5 * (hit_record.normal->x + 1);
-		color->y = 0.5 * (hit_record.normal->y + 1);
-		color->z = 0.5 * (hit_record.normal->z + 1);
-		return (color);
+		if (container->type == SPHERE)
+		{
+			if (hit_sphere(container->object, ray, &interval,
+						temp_rec))
+			{
+				hit_anything = TRUE;
+				interval.max = temp_rec->t;
+				rec = temp_rec;
+			}
+		}
+		container = container->next;
 	}
-	unit_direction = unit_vector(ray->dir);
-	a = 0.5 * (unit_direction->y + 1.0);
-	white_color.x = 1.0;
-	white_color.y = 1.0;
-	white_color.z = 1.0;
-	blue_color.x = 0.5;
-	blue_color.y = 0.7;
-	blue_color.z = 1.0;
-	temp1 = scalar_op(1.0 - a, &white_color);
-	temp2 = scalar_op(a, &blue_color);
-	color = addition_op(temp1, temp2);
-	return (color);
+	return (hit_anything);
+}
+
+T_COLOR	*ray_color(t_ray *ray, t_object_container *world)
+{
+	T_COLOR			white_color;
+	T_COLOR			blue_color;
+	double			a;
+	t_interval		ray_t;
+	t_hit_record	hit_record;
+	
+	ray_t.min = 0;
+	ray_t.max = INFINITY;
+	if (hit_any_object(world, ray, &ray_t, &hit_record))
+		return (create_vec3(0.5 * (hit_record.normal->x + 1), 
+							0.5 * (hit_record.normal->y + 1),
+							0.5 * (hit_record.normal->z + 1)));
+	a = 0.5 * (unit_vector(ray->dir)->y + 1.0);
+	fill_vec3(&white_color, 1.0, 1.0, 1.0);
+	fill_vec3(&blue_color, 0.5, 0.7, 1.0);
+	return (addition_op(scalar_op(1.0 - a, &white_color),
+			scalar_op(a, &blue_color)));
 }
 
 int	render(t_data *win_data, t_setup3d *setup3d)
@@ -163,7 +201,7 @@ int	render(t_data *win_data, t_setup3d *setup3d)
 			setup3d->ray.orig = setup3d->camera_center;
 			setup3d->ray.dir = subtraction_op(
 					pixel_center, setup3d->camera_center);
-			pixel_color = ray_color(&setup3d->ray);
+			pixel_color = ray_color(&setup3d->ray, setup3d->world);
 			pixel_put_in_img(&win_data->img, jdx, idx, pixel_color);
 			jdx++;
 		}

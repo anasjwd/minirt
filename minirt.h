@@ -16,6 +16,9 @@
 # define FALSE 0
 # define TRUE 1
 
+# define MIN 0
+# define MAX 1
+
 # define PI 3.14159265358979323
 
 # define SPHERE 0
@@ -49,19 +52,31 @@ typedef struct s_ray {
 	T_POINT3	*dir;
 }				t_ray;
 
+typedef struct s_object_container {
+	int							type;
+	void						*object;
+	struct s_object_container	*next;
+}				t_object_container;
+
+typedef struct s_sphere {
+	T_POINT3	*center;
+	double		radius;
+}				t_sphere;
+
 typedef struct s_setup3d
 {
-	T_POINT3	*camera_center;
-	double		focal_length;
-	t_ray		ray;
-	double		viewport_height;
-	double		viewport_width;
-	T_VEC3		*viewport_u;
-	T_VEC3		*viewport_v;
-	T_POINT3	*viewport_upper_left;
-	T_POINT3	*pixel00_loc;
-	T_VEC3		*pixel_delta_u;
-	T_VEC3		*pixel_delta_v;
+	T_POINT3			*camera_center;
+	double				focal_length;
+	t_ray				ray;
+	double				viewport_height;
+	double				viewport_width;
+	T_VEC3				*viewport_u;
+	T_VEC3				*viewport_v;
+	T_POINT3			*viewport_upper_left;
+	T_POINT3			*pixel00_loc;
+	T_VEC3				*pixel_delta_u;
+	T_VEC3				*pixel_delta_v;
+	t_object_container	*world;
 }				t_setup3d;
 
 typedef struct s_hit_record {
@@ -71,18 +86,6 @@ typedef struct s_hit_record {
 	BOOL		front_face;
 }				t_hit_record;
 
-typedef struct s_object {
-	int	type;
-}				t_object;
-
-typedef struct s_sphere {
-	int			type;
-	T_POINT3	*center;
-	double		radius;
-	BOOL		(*hit)(struct s_sphere *, t_ray *, int *, t_hit_record *);
-	t_object	*next;
-}				t_sphere;
-
 typedef struct s_quadratic_eq {
 	double	a;
 	double	b;
@@ -90,6 +93,12 @@ typedef struct s_quadratic_eq {
 	double	rep;
 	double discriminant;
 }				t_quadratic_eq;
+
+typedef struct s_interval
+{
+	double	min;
+	double	max;
+}				t_interval;
 
 t_vec3	*scalar_op(double t, t_vec3 *vec);
 t_vec3	*division_op(double t, t_vec3 *v);
@@ -102,9 +111,11 @@ double	vector_length(t_vec3 *vec);
 t_vec3	*unit_vector(t_vec3 *vector);
 T_POINT3	*ray_at(t_ray *ray, double t);
 double	vector_length_squared(t_vec3 *vec);
-BOOL	sphere_hit(t_sphere *sphere, t_ray *ray, int *ray_t,
+t_sphere	*create_sphere(T_POINT3 *center, double radius);
+BOOL	hit_sphere(void *object, t_ray *ray, t_interval *ray_t,
 		t_hit_record *rec);
 void	set_face_normal(t_hit_record *hit_record,
 					t_ray *ray, T_VEC3 *outward_normal);
+void	fill_vec3(t_vec3 *vec, double x, double y, double z);
 
 #endif
