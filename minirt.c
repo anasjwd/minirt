@@ -30,6 +30,11 @@ void	pixel_put_in_img(t_img *img, int x, int y, T_COLOR *color)
 	*(unsigned int *)dest = rgb;
 }
 
+int	destroy_window(void *ptr)
+{
+	exit(1);
+}
+
 int	create_window(t_data *window_data)
 {
 	window_data->aspect_ratio = 16.0 / 9.0;
@@ -40,6 +45,7 @@ int	create_window(t_data *window_data)
 	window_data->mlx = mlx_init();
 	window_data->mlx_win = mlx_new_window(window_data->mlx, window_data->width,
 			window_data->height, "Minirt");
+	mlx_hook(window_data->mlx_win, 17, 0, destroy_window, NULL);
 	return (0);
 }
 
@@ -93,23 +99,15 @@ t_object_container	*create_object(int type, void *object)
 
 int	setup_3d_world(t_data *win_data, t_setup3d *setup3d)
 {
-	setup3d->world = NULL;
-	add_object(&setup3d->world, create_object(SPHERE,
-			create_sphere(create_vec3(0, 0, -1), 0.5)));
-	add_object(&setup3d->world, create_object(SPHERE,
-			create_sphere(create_vec3(0, -100.5, -1), 100)));
 	setup3d->focal_length = 1.0;
 	setup3d->viewport_height = 2.0;
-	/*height * aspect_ratio*/
 	setup3d->viewport_width = setup3d->viewport_height *
 		((double)win_data->width / win_data->height);
 	setup3d->camera_center = create_vec3(0, 0, 0);
 	setup3d->viewport_u = create_vec3(setup3d->viewport_width, 0, 0);
 	setup3d->viewport_v = create_vec3(0, -setup3d->viewport_height, 0);
-	/*viewport_u / width, function takes them in reverse order*/
 	setup3d->pixel_delta_u = division_op(win_data->width, setup3d->viewport_u);
 	setup3d->pixel_delta_v = division_op(win_data->height, setup3d->viewport_v);
-	/*Q = camera_center - focal_length - u/2 - v/2*/
 	setup3d->viewport_upper_left = create_vec3(
 			setup3d->camera_center->x - (setup3d->viewport_u->x / 2),
 			setup3d->camera_center->y - (setup3d->viewport_v->y / 2),
@@ -188,6 +186,7 @@ int	render(t_data *win_data, t_setup3d *setup3d)
 	T_POINT3	*pixel_center;
 	T_COLOR		*pixel_color;
 
+	setup_3d_world(win_data, setup3d);
 	idx = 0;
 	while (idx < win_data->height)
 	{
@@ -216,8 +215,13 @@ int	main(void)
 	t_data		window_data;
 	t_setup3d	setup3d;
 
+	setup3d.world = NULL;
+	add_object(&setup3d.world, create_object(SPHERE,
+			create_sphere(create_vec3(0, 0, -1), 0.5)));
+	add_object(&setup3d.world, create_object(SPHERE,
+			create_sphere(create_vec3(0, -100.5, -1), 100)));
 	create_window(&window_data);
-	setup_3d_world(&window_data, &setup3d);
+	//setup_3d_world(&window_data, &setup3d);
 	create_image(&window_data);
 	render(&window_data, &setup3d);
 	mlx_loop(window_data.mlx);
