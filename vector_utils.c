@@ -108,3 +108,21 @@ void	fill_vec3(t_vec3 *vec, double x, double y, double z)
 	vec->z = z;
 }
 
+t_vec3	*create_vec3(double x, double y, double z)
+{
+	t_vec3	*v;
+
+	/*TODO: malloc with ft_alloc*/
+	/**
+	 * note: malloc for things I will be using for a short time
+	 * ft_alloc for things that will last till the end of program
+	 **/
+	v = malloc(sizeof(t_vec3));
+	if (v == NULL)
+		return (NULL);
+	v->x = x;
+	v->y = y;
+	v->z = z;
+	return (v);
+}
+

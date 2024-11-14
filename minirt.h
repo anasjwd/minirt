@@ -67,7 +67,7 @@ typedef struct s_setup3d
 {
 	T_POINT3			*camera_center;
 	double				focal_length;
-	t_ray				ray;
+	t_ray				*ray;
 	double				viewport_height;
 	double				viewport_width;
 	T_VEC3				*viewport_u;
@@ -77,6 +77,8 @@ typedef struct s_setup3d
 	T_VEC3				*pixel_delta_u;
 	T_VEC3				*pixel_delta_v;
 	t_object_container	*world;
+	int					samples_per_pixel;
+	doubl				pixel_samples_scale;
 }				t_setup3d;
 
 typedef struct s_hit_record {
@@ -117,5 +119,15 @@ BOOL	hit_sphere(void *object, t_ray *ray, t_interval *ray_t,
 void	set_face_normal(t_hit_record *hit_record,
 					t_ray *ray, T_VEC3 *outward_normal);
 void	fill_vec3(t_vec3 *vec, double x, double y, double z);
+int	render(t_data *win_data, t_setup3d *setup3d);
+T_COLOR	*ray_color(t_ray *ray, t_object_container *world);
+int	setup_3d_world(t_data *win_data, t_setup3d *setup3d);
+t_object_container	*create_object(int type, void *object);
+void	add_object(t_object_container **world, t_object_container *new_object);
+BOOL	hit_any_object(t_object_container *world, t_ray *ray, t_interval *ray_t,
+		t_hit_record *rec);
+int	create_window(t_data *window_data);
+t_vec3	*create_vec3(double x, double y, double z);
+void	pixel_put_in_img(t_img *img, int x, int y, T_COLOR *color);
 
 #endif
