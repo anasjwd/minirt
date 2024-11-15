@@ -43,6 +43,25 @@ T_COLOR	*ray_color(t_ray *ray, t_object_container *world)
 			scalar_op(a, &blue_color)));
 }
 
+double random_double(void)
+{
+	static unsigned long int next = 12345;
+    unsigned long int a;
+    unsigned long int c;
+    unsigned long int m;
+
+	a = 1664525;
+	c = 1013904223;
+	m = 4294967296;
+    next = (a * next + c) % m;
+    return ((double)next / (double)m);
+}
+
+T_VEC3	*sample_square(void)
+{
+	return (create_vec3(random_double() - 0.5, random_double() - 0.5, 0));
+}
+
 t_ray	*get_ray(t_setup3d *setup3d, int jdx, int idx)
 {
 	T_VEC3		*offset;
@@ -57,7 +76,9 @@ t_ray	*get_ray(t_setup3d *setup3d, int jdx, int idx)
 	ray = malloc(sizeof(t_ray));
 	if (ray == NULL)
 		return (NULL);
-	ray->orig = setup3d->center;
+	ray->orig = setup3d->camera_center;
+	ray->dir = subtraction_op(pixel_sample, ray->orig);
+	return (ray);
 }
 
 int	render(t_data *win_data, t_setup3d *setup3d)
@@ -75,17 +96,17 @@ int	render(t_data *win_data, t_setup3d *setup3d)
 		jdx = 0;
 		while (jdx < win_data->width)
 		{
-			pixel_color = creat_vec3(0, 0, 0);
+			pixel_color = create_vec3(0, 0, 0);
 			sample = 0;
 			while (sample < setup3d->samples_per_pixel)
 			{
-				setup3d->ray = get_ray(j, i);
+				setup3d->ray = get_ray(setup3d, jdx, idx);
 				pixel_color = addition_op(pixel_color,
 						ray_color(setup3d->ray, setup3d->world));
 				sample++;
 			}
 			pixel_put_in_img(&win_data->img, jdx, idx,
-					scalar_op(setup3d->pixel_samples_scale, pixel_color);
+					scalar_op(setup3d->pixel_samples_scale, pixel_color));
 			jdx++;
 		}
 		idx++;

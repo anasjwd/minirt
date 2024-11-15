@@ -78,7 +78,7 @@ typedef struct s_setup3d
 	T_VEC3				*pixel_delta_v;
 	t_object_container	*world;
 	int					samples_per_pixel;
-	doubl				pixel_samples_scale;
+	double				pixel_samples_scale;
 }				t_setup3d;
 
 typedef struct s_hit_record {
