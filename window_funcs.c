@@ -2,6 +2,7 @@
 
 int	destroy_window(void *ptr)
 {
+	(void)ptr;
 	exit(1);
 }
 

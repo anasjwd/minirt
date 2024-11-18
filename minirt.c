@@ -51,6 +51,7 @@ int	create_image(t_data *win_data)
 	win_data->img.addr = mlx_get_data_addr(win_data->img.img,
 			&win_data->img.bits_per_pixel, &win_data->img.line_length,
 			&win_data->img.endian);
+	return (1);
 }
 
 int	main(void)

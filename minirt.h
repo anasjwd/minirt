@@ -120,7 +120,7 @@ void	set_face_normal(t_hit_record *hit_record,
 					t_ray *ray, T_VEC3 *outward_normal);
 void	fill_vec3(t_vec3 *vec, double x, double y, double z);
 int	render(t_data *win_data, t_setup3d *setup3d);
-T_COLOR	*ray_color(t_ray *ray, t_object_container *world);
+T_COLOR	*ray_color(t_ray *ray, t_object_container *world, int depth);
 int	setup_3d_world(t_data *win_data, t_setup3d *setup3d);
 t_object_container	*create_object(int type, void *object);
 void	add_object(t_object_container **world, t_object_container *new_object);
@@ -129,5 +129,10 @@ BOOL	hit_any_object(t_object_container *world, t_ray *ray, t_interval *ray_t,
 int	create_window(t_data *window_data);
 t_vec3	*create_vec3(double x, double y, double z);
 void	pixel_put_in_img(t_img *img, int x, int y, T_COLOR *color);
+double	random_double_interval(double min, double max);
+double random_double(void);
+T_VEC3	*random_unit_vector(void);
+T_VEC3	*random_vec_interval(double min, double max);
+double	random_double_interval(double min, double max);
 
 #endif

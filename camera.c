@@ -1,4 +1,5 @@
 #include "minirt.h"
+#define MAX_DEPTH 1
 
 int	setup_3d_world(t_data *win_data, t_setup3d *setup3d)
 {
@@ -22,39 +23,43 @@ int	setup_3d_world(t_data *win_data, t_setup3d *setup3d)
 	return (0);
 }
 
-T_COLOR	*ray_color(t_ray *ray, t_object_container *world)
+T_VEC3	*random_on_hemisphere(T_VEC3 *normal)
+{
+	T_VEC3	*on_unit_sphere;
+
+	on_unit_sphere = random_unit_vector();
+	if (dot_product(on_unit_sphere, normal) > 0.0)
+		return (on_unit_sphere);
+	else
+		return (scalar_op(-1, on_unit_sphere));
+}
+
+T_COLOR	*ray_color(t_ray *ray, t_object_container *world, int depth)
 {
 	T_COLOR			white_color;
 	T_COLOR			blue_color;
 	double			a;
 	t_interval		ray_t;
 	t_hit_record	hit_record;
+	T_VEC3			*direction;
+	t_ray			new_ray;
 	
-	ray_t.min = 0;
+	ray_t.min = 0.001;
 	ray_t.max = INFINITY;
 	if (hit_any_object(world, ray, &ray_t, &hit_record))
-		return (create_vec3(0.5 * (hit_record.normal->x + 1), 
-							0.5 * (hit_record.normal->y + 1),
-							0.5 * (hit_record.normal->z + 1)));
+	{
+		if (depth <= 0)
+			return (create_vec3(0, 0, 0));
+		direction = random_on_hemisphere(hit_record.normal);
+		new_ray.orig = hit_record.point;
+		new_ray.dir = direction;
+		return (scalar_op(0.5, ray_color(&new_ray, world, depth - 1)));
+	}
 	a = 0.5 * (unit_vector(ray->dir)->y + 1.0);
 	fill_vec3(&white_color, 1.0, 1.0, 1.0);
 	fill_vec3(&blue_color, 0.5, 0.7, 1.0);
 	return (addition_op(scalar_op(1.0 - a, &white_color),
 			scalar_op(a, &blue_color)));
-}
-
-double random_double(void)
-{
-	static unsigned long int next = 12345;
-    unsigned long int a;
-    unsigned long int c;
-    unsigned long int m;
-
-	a = 1664525;
-	c = 1013904223;
-	m = 4294967296;
-    next = (a * next + c) % m;
-    return ((double)next / (double)m);
 }
 
 T_VEC3	*sample_square(void)
@@ -86,7 +91,6 @@ int	render(t_data *win_data, t_setup3d *setup3d)
 	int			idx;
 	int			jdx;
 	int			sample;
-	T_POINT3	*pixel_center;
 	T_COLOR		*pixel_color;
 
 	setup_3d_world(win_data, setup3d);
@@ -102,7 +106,7 @@ int	render(t_data *win_data, t_setup3d *setup3d)
 			{
 				setup3d->ray = get_ray(setup3d, jdx, idx);
 				pixel_color = addition_op(pixel_color,
-						ray_color(setup3d->ray, setup3d->world));
+						ray_color(setup3d->ray, setup3d->world, MAX_DEPTH));
 				sample++;
 			}
 			pixel_put_in_img(&win_data->img, jdx, idx,
@@ -113,6 +117,7 @@ int	render(t_data *win_data, t_setup3d *setup3d)
 	}
 	mlx_put_image_to_window(win_data->mlx, win_data->mlx_win, win_data->img.img,
 			0, 0);
+	return (1);
 }
 
 /*pixel_center = create_vec3(

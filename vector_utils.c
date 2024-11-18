@@ -125,4 +125,3 @@ t_vec3	*create_vec3(double x, double y, double z)
 	v->z = z;
 	return (v);
 }
-
